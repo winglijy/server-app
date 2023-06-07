@@ -3,16 +3,29 @@ const app = express()
 const port = 3001
 
 const Pool = require('pg').Pool
+require('dotenv').config()
 
 // Create a new instance of the Pool
 const pool = new Pool({
-    user: 'jing',
-    host: 'localhost',
-    database: 'my_app',
-    // password: 'your_password',
-    port: 5432, // Replace with your PostgreSQL port
-});
+    // user: 'jing',
+    // host: 'localhost',
+    // database: 'my_app',
+    // password: '',
 
+    user: process.env.DB_USER,
+    host: process.env.DB_URL,
+    database: process.env.DB_DB,
+    password: process.env.DB_PASS,
+
+    // Only enable this code for render.com deployment
+    ssl: {
+        rejectUnauthorized: false, // Accept self-signed certificates or use a valid CA-signed certificate
+      },
+    port: 5432, // Replace with your PostgreSQL port
+
+
+});
+console.log("pool user name: ", pool.username);
 app.use(express.json()); // Add this line to parse JSON data
 
 const cors = require('cors');
@@ -36,6 +49,7 @@ app.post('/login', (req, res) => {
     pool.query(query)
         .then((result) => {
             const count = result.rows[0].count;
+            console.log('Resulting row count is ', count);
             if (count > 0) {
                 console.log('Login successful');
                 res.sendStatus(200);
