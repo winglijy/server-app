@@ -5,6 +5,13 @@ const port = 3001
 const Pool = require('pg').Pool
 require('dotenv').config()
 
+const Configuration = require('openai').Configuration
+const openAiConfig = new Configuration({
+    apiKey: process.env.OPEN_AI_KEY 
+});
+const OpenAIApi = require('openai').OpenAIApi
+const openAi = new OpenAIApi(openAiConfig);
+
 // Create a new instance of the Pool
 const pool = new Pool({
     // user: 'jing',
@@ -94,6 +101,30 @@ app.post('/signup', (req, res) => {
     // Send a response back to the client
     // res.sendStatus(200);
   });
+
+app.post("/chat", async (req, res) => {
+    // const clientMessage = req.body;
+    const { clientMessage } = req.body;
+
+    console.log("client message:", clientMessage)
+
+    // res.status(200).json({ completion: "test completion."});
+
+    const chatCompletion = await openAi.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: [
+            {
+                role: "system",
+                content: "You are empathetic listerner, and a Cognitive Behavioral Therapist, your kind and open approach to CBT allows users to confide in you. You ask questions one by one and collect the user's responses to implement the following steps of CBT. Help the user identify troubling situations or conditions in their life. Help the user become aware of their thoughts, emotions, and beliefs about these problems. Using the user's answers to the questions, you identify and categorize negative or inaccurate thinking that is causing the user anguish into one or more of the following CBT-defined categories. Using the user's answers, you ask them to reframe their negative thoughts with your expert advice. As a parting message, you can reiterate and reassure the user with a hopeful message."
+            },
+            clientMessage
+        ],
+        temperature: 0.7
+    });
+
+    console.log("OpenAI return:", chatCompletion.data.choices[0].message)
+    res.status(200).json({ completion: chatCompletion.data.choices[0].message });
+});
 
 app.listen(port, () => {
     console.log(`App running on port ${port}.`)
